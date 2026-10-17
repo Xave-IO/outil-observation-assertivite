@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outil d'Observation Interactive : Comportements Assertifs</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- 
+    <!-- Chosen Palette: Sunlit Neutrals & Deep Orange -->
+    <!-- Application Structure Plan: Dashboard layout. Updated aesthetics to be lighter and more professional. The header now features the Synaps Formation logo on the left and uses a light background with orange accents. The interactive sections (Radar Chart and Non-Verbal Lab) are maintained but restyled with orange primary actions and a cleaner, whiter overall feel to reduce the "dark" impression of the previous version. -->
+    <!-- Visualization & Content Choices: 
+         1. Radar Chart (Chart.js): Still the best for 12-point behavioral profiles. Colors shifted from teal to deep orange/amber.
+         2. Non-Verbal Lab: Button matrix with interactive feedback, using orange for positive/assertive states. 
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    -->
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body { font-family: 'Inter', sans-serif; }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 500px;
+        }
+        @media (min-width: 1024px) {
+            .chart-container { height: 500px; }
+        }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #fff7ed; }
+        ::-webkit-scrollbar-thumb { background: #fdba74; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #f97316; }
+
+        /* Animation douce pour les changements de couleurs */
+        .nv-btn { transition: all 0.2s ease-in-out; }
+    </style>
+</head>
+<body class="bg-[#fdfdfc] text-slate-800 antialiased">
+
+    <!-- Header Section - Version Lumineuse -->
+    <header class="bg-white py-6 px-4 md:px-8 border-b border-orange-100 shadow-sm">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            <!-- Logo Synaps -->
+            <div class="flex-shrink-0">
+                <img src="https://synaps-formation.com/images/logo-synaps-whts.jpg" alt="Logo Synaps Formation" class="h-16 md:h-20 w-auto object-contain">
+            </div>
+            
+            <div class="text-center md:text-right">
+                <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Grille d'Observation Interactive</h1>
+                <p class="text-orange-600 font-semibold text-sm uppercase tracking-widest mt-1">Comportements Assertifs & Relation Client</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Règle d'Or en bannière discrète -->
+    <div class="bg-orange-500 text-white py-3 px-4 text-center">
+        <p class="text-lg font-medium italic">« Dire les choses clairement, sans tension inutile. »</p>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto p-4 md:p-8 space-y-12">
+
+        <!-- Section 1 : Évaluation Interactive -->
+        <section id="evaluation-section" class="bg-white rounded-3xl shadow-xl shadow-orange-100/50 border border-orange-50 overflow-hidden">
+            <div class="p-6 md:p-8 bg-gradient-to-r from-orange-50 to-white border-b border-orange-100">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Diagnostic de l'Interaction</h2>
+                <p class="text-slate-600 leading-relaxed max-w-4xl">
+                    Évaluez les 12 comportements observés lors de la mise en situation. Le profil se dessine en temps réel sur le graphique radar pour identifier les points d'appui et les leviers de progression.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-0">
+                <!-- Colonne de gauche : Sliders -->
+                <div class="lg:col-span-7 p-6 md:p-8 max-h-[700px] overflow-y-auto border-r border-orange-50" id="sliders-container">
+                    <!-- Généré par JavaScript -->
+                </div>
+                
+                <!-- Colonne de droite : Graphique -->
+                <div class="lg:col-span-5 p-6 md:p-8 flex flex-col items-center justify-center bg-white">
+                    <div class="w-full flex justify-between items-center mb-8">
+                        <h3 class="text-sm font-bold text-orange-600 uppercase tracking-widest">Cartographie d'Assertivité</h3>
+                        <button onclick="resetEvaluation()" class="text-xs px-4 py-2 bg-slate-100 hover:bg-orange-100 text-slate-600 hover:text-orange-700 rounded-full transition-all font-bold">RÉINITIALISER</button>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="assertiviteRadarChart"></canvas>
+                    </div>
+                    
+                    <div class="mt-8 text-center text-sm text-slate-500 bg-orange-50/50 p-5 rounded-2xl border border-orange-100 w-full" id="insight-container">
+                        <p id="chart-insight" class="leading-snug">Commencez l'évaluation pour analyser le profil comportemental.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2 : Posture et Non-Verbal -->
+        <section id="non-verbal-section" class="bg-white rounded-3xl shadow-xl shadow-orange-100/50 border border-orange-50 p-6 md:p-8">
+            <div class="mb-10">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Analyse du Non-Verbal</h2>
+                <p class="text-slate-600 leading-relaxed max-w-4xl">
+                    L'impact d'un message dépend à 90% de la forme. Sélectionnez les indicateurs observés pour évaluer la congruence de la posture.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+                
+                <!-- Regard -->
+                <div class="space-y-4">
+                    <h4 class="font-bold text-slate-900 flex items-center gap-2">
+                        <span class="w-2 h-6 bg-orange-500 rounded-full"></span>👁️ Regard
+                    </h4>
+                    <div class="flex flex-col gap-2" id="group-regard">
+                        <button onclick="setNonVerbal('regard', 'stable', this)" class="nv-btn text-left px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-orange-300 text-sm font-medium">Stable / Franc</button>
+                        <button onclick="setNonVerbal('regard', 'fuyant', this)" class="nv-btn text-left px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-orange-300 text-sm font-medium">Fuyant</button>
+                        <button onclick="setNonVerbal('regard', 'intimidant', this)" class="nv-btn text-left px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-orange-300 text-sm font-medium">Intimidant</button>
+                    </div>
+                </div>
+
+                <!-- Voix -->
+                <div class="space-y-4">
+                    <h4 class="font-bold text-slate-900 flex items-center gap-2">
+                        <span class="w-2 h-6 bg-orange-500 rounded-full"></span>🗣️ Voix
+                    </h4>
+                    <div class="flex flex-col gap-2" id="group-voix">
+                        <button onclick="setNonVerbal('voix', 'posee', this)" class="nv-btn text-left px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-orange-300 text-sm font-medium">Posée / Calme</button>
+                        <button onclick="setNonVerbal('voix', 'hesitante', this)" class="nv-btn text-left px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-orange-300 text-sm font-medium">Hésitante</button>
+                        <button onclick="setNonVerbal('voix', 'forte', this)" class="nv-btn text-left px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-orange-300 text-sm font-medium">Trop forte</button>
+                    </div>
+                </div>
+
+                <!-- Débit -->
+                <div class="space-y-4">
+                    <h4 class="font-bold text-slate-900 flex items-center gap-2">
+                        <span class="w-2 h-6 bg-orange-500 rounded-full"></span>⏱️ Débit
+                    </h4>
+                    <div class="flex flex-col gap-2" id="group-debit">
+                        <button onclick="setNonVerbal('debit', 'fluide', this)" class="nv-btn text-left px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-orange-300 text-sm font-medium">Fluide / Maîtrisé</button>
+                        <button onclick="setNonVerbal('debit', 'lent', this)" class="nv-btn text-left px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-orange-300 text-sm font-medium">Trop lent</button>
+                        <button onclick="setNonVerbal('debit', 'rapide', this)" class="nv-btn text-left px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-orange-300 text-sm font-medium">Trop rapide (Stress)</button>
+                    </div>
+                </div>
+
+                <!-- Gestuelle -->
+                <div class="space-y-4">
+                    <h4 class="font-bold text-slate-900 flex items-center gap-2">
+                        <span class="w-2 h-6 bg-orange-500 rounded-full"></span>👐 Gestuelle
+                    </h4>
+                    <div class="flex flex-col gap-2" id="group-gestuelle">
+                        <button onclick="setNonVerbal('gestuelle', 'ouverte', this)" class="nv-btn text-left px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-orange-300 text-sm font-medium">Ouverte / Détendue</button>
+                        <button onclick="setNonVerbal('gestuelle', 'fermee', this)" class="nv-btn text-left px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-orange-300 text-sm font-medium">Fermée (Bras croisés)</button>
+                        <button onclick="setNonVerbal('gestuelle', 'agitee', this)" class="nv-btn text-left px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-orange-300 text-sm font-medium">Agitée / Nerveuse</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Synthèse - Look Orangé -->
+            <div class="bg-orange-600 p-6 md:p-8 rounded-2xl shadow-lg shadow-orange-200 text-white" id="nv-synthesis-box">
+                <h4 class="font-bold text-xl mb-2 flex items-center gap-3">
+                    🚀 Analyse de l'Impact
+                </h4>
+                <p id="nv-synthesis-text" class="text-orange-50 font-medium">Sélectionnez les éléments non-verbaux pour évaluer la posture globale.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-50 text-slate-400 py-10 text-center text-sm border-t border-slate-100">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>© Synaps Formation - Outil d'accompagnement séminaire</p>
+        </div>
+    </footer>
+
+    <script>
+        const behaviorsData = [
+            { id: 0, label: "S'affirmer sans heurter l'autre", shortLabel: "S'affirmer", desc: "Exprime son point de vue tout en préservant la relation." },
+            { id: 1, label: "Sait dire NON sans culpabiliser", shortLabel: "Dire Non", desc: "Refuse clairement et propose une alternative." },
+            { id: 2, label: "Ose exprimer son ressenti", shortLabel: "Ressenti", desc: "Partage ses émotions factuellement pour débloquer l'échange." },
+            { id: 3, label: "Sait exprimer ses besoins clairement", shortLabel: "Besoins", desc: "Formule des demandes précises et directes." },
+            { id: 4, label: "Admet ses erreurs et s'excuse", shortLabel: "Erreurs", desc: "Reconnaît ses torts sans se dévaloriser." },
+            { id: 5, label: "Ose exprimer un avis impopulaire", shortLabel: "Avis Divers", desc: "Défend une idée minoritaire avec calme." },
+            { id: 6, label: "Respecte l'opinion de l'autre", shortLabel: "Respect", desc: "Écoute activement même en cas de désaccord." },
+            { id: 7, label: "Apprécie les qualités d'autrui", shortLabel: "Appréciation", desc: "Verbalise les points forts de son interlocuteur." },
+            { id: 8, label: "Établit ses limites clairement", shortLabel: "Limites", desc: "Protège son cadre de travail et ses priorités." },
+            { id: 9, label: "Demande de l'aide si nécessaire", shortLabel: "Aide", desc: "Fait preuve de lucidité face à un obstacle." },
+            { id: 10, label: "Révise son jugement", shortLabel: "Prise Hauteur", desc: "Prend du recul et modifie sa vision selon les faits." },
+            { id: 11, label: "Attitude & discours constructifs", shortLabel: "Constructif", desc: "Orienté solutions et futur." }
+        ];
+
+        let evaluationScores = Array(12).fill(1);
+        let radarChartInstance = null;
+
+        function initApp() {
+            renderSliders();
+            initRadarChart();
+        }
+
+        function renderSliders() {
+            const container = document.getElementById('sliders-container');
+            container.innerHTML = '';
+            
+            behaviorsData.forEach((item, index) => {
+                const html = `
+                    <div class="mb-6 pb-6 border-b border-orange-50 last:border-0 last:pb-0 last:mb-0">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-base">${item.label}</h4>
+                                <p class="text-xs text-slate-400 mt-0.5">${item.desc}</p>
+                            </div>
+                            <div class="bg-orange-500 text-white font-bold px-3 py-1 rounded-lg text-lg w-10 h-10 flex items-center justify-center shadow-sm" id="val-display-${index}">
+                                1
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-300 uppercase w-12 text-center">Bas</span>
+                            <input type="range" min="1" max="4" value="1" step="1" 
+                                class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-orange-600"
+                                oninput="updateScore(${index}, this.value)">
+                            <span class="text-[10px] font-bold text-orange-400 uppercase w-12 text-center">Top</span>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function initRadarChart() {
+            const ctx = document.getElementById('assertiviteRadarChart').getContext('2d');
+            const labels = behaviorsData.map(b => b.shortLabel);
+            
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Niveau Observé',
+                        data: evaluationScores,
+                        backgroundColor: 'rgba(249, 115, 22, 0.15)',
+                        borderColor: 'rgba(249, 115, 22, 1)',
+                        pointBackgroundColor: 'rgba(249, 115, 22, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(249, 115, 22, 1)',
+                        borderWidth: 3,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: '#fed7aa' },
+                            grid: { color: '#fed7aa' },
+                            pointLabels: {
+                                font: { family: "'Inter', sans-serif", size: 10, weight: '600' },
+                                color: '#64748b'
+                            },
+                            ticks: {
+                                beginAtZero: true,
+                                min: 0,
+                                max: 4,
+                                stepSize: 1,
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            padding: 12,
+                            cornerRadius: 12
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateScore(index, value) {
+            document.getElementById(`val-display-${index}`).textContent = value;
+            evaluationScores[index] = parseInt(value);
+            radarChartInstance.data.datasets[0].data = evaluationScores;
+            radarChartInstance.update();
+            generateInsight();
+        }
+
+        function resetEvaluation() {
+            evaluationScores = Array(12).fill(1);
+            radarChartInstance.data.datasets[0].data = evaluationScores;
+            radarChartInstance.update();
+            renderSliders();
+            document.getElementById('chart-insight').textContent = "Évaluation réinitialisée. En attente de nouvelles observations.";
+        }
+
+        function generateInsight() {
+            const avg = evaluationScores.reduce((a, b) => a + b, 0) / 12;
+            const insightBox = document.getElementById('chart-insight');
+            
+            if (avg < 1.8) {
+                insightBox.innerHTML = "<span class='text-orange-700 font-bold'>Profil Effacé :</span> Posture trop passive. Risque de subir l'interaction au détriment des objectifs.";
+            } else if (avg < 2.8) {
+                insightBox.innerHTML = "<span class='text-slate-700 font-bold'>Profil en Construction :</span> Bases d'assertivité présentes mais fragiles. Besoin de fluidifier l'expression des besoins.";
+            } else if (avg < 3.6) {
+                insightBox.innerHTML = "<span class='text-orange-600 font-bold'>Profil Assertif :</span> Communication équilibrée et efficace. Relation client de qualité.";
+            } else {
+                insightBox.innerHTML = "<span class='text-orange-600 font-bold'>Maîtrise Totale :</span> Leadership affirmé et bienveillant. Excellente gestion des situations complexes.";
+            }
+        }
+
+        let nvState = { regard: null, voix: null, debit: null, gestuelle: null };
+
+        function setNonVerbal(category, value, buttonElement) {
+            nvState[category] = value;
+            const group = document.getElementById(`group-${category}`);
+            const buttons = group.querySelectorAll('.nv-btn');
+            
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-orange-600', 'text-white', 'border-orange-600', 'bg-slate-400', 'bg-slate-800');
+                btn.classList.add('bg-slate-50', 'text-slate-700');
+            });
+
+            buttonElement.classList.remove('bg-slate-50', 'text-slate-700');
+            
+            if (['stable', 'posee', 'fluide', 'ouverte'].includes(value)) {
+                buttonElement.classList.add('bg-orange-600', 'text-white', 'border-orange-600');
+            } else if (['fuyant', 'hesitante', 'lent', 'fermee'].includes(value)) {
+                buttonElement.classList.add('bg-slate-400', 'text-white');
+            } else {
+                buttonElement.classList.add('bg-slate-800', 'text-white');
+            }
+
+            analyzeNonVerbal();
+        }
+
+        function analyzeNonVerbal() {
+            const box = document.getElementById('nv-synthesis-box');
+            const textElement = document.getElementById('nv-synthesis-text');
+            
+            let assertifCount = 0;
+            let passifCount = 0;
+            let agressifCount = 0;
+            let totalSelected = 0;
+
+            const values = Object.values(nvState);
+            values.forEach(val => {
+                if(val) totalSelected++;
+                if(['stable', 'posee', 'fluide', 'ouverte'].includes(val)) assertifCount++;
+                if(['fuyant', 'hesitante', 'lent', 'fermee'].includes(val)) passifCount++;
+                if(['intimidant', 'forte', 'rapide', 'agitee'].includes(val)) agressifCount++;
+            });
+
+            if (totalSelected === 0) return;
+
+            if (assertifCount === totalSelected && totalSelected > 0) {
+                textElement.innerHTML = "<strong>Excellente Posture :</strong> Vous dégagez une assurance sereine. Le client se sent écouté et respecté, facilitant la conclusion d'accords.";
+            } else if (agressifCount > 0) {
+                 textElement.innerHTML = "<strong>Alerte Agressivité :</strong> Attention, certains signaux (voix, regard) peuvent être perçus comme une pression excessive. Adoucissez la forme.";
+            } else if (passifCount > 0) {
+                 textElement.innerHTML = "<strong>Manque d'Impact :</strong> Votre posture trahit un manque de conviction. Votre message perd de sa force face au distributeur ou à l'installateur.";
+            } else {
+                 textElement.innerHTML = "Posture hétérogène. Travaillez sur la cohérence de vos signaux non-verbaux pour renforcer votre crédibilité.";
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
